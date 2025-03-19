@@ -5,7 +5,7 @@ import java.awt.event.*;
 
 public class PhotoAlbumView extends JFrame{
     JButton addBtn, delBtn, nextBtn, prevBtn, nameBtn, dateBtn, sizeBtn, exitBtn;
-    int buttonPanelHeight = 100; // Height of the button panel (adjust this as needed)
+    int buttonPanelHeight = 100; // Height of the button panel
     int imageHeight;
 
     public PhotoAlbumView(){ drawScreen(); }
@@ -25,7 +25,7 @@ public class PhotoAlbumView extends JFrame{
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         // Set Image
         imageHeight = getHeight() - buttonPanelHeight;
-        ImageIcon mainImage = new ImageIcon("src/IconImage.PNG"); // Replace with your image path
+        ImageIcon mainImage = new ImageIcon("src/IconImage.PNG");
         Image img = mainImage.getImage();
         Image resizedImage = img.getScaledInstance(imageHeight, imageHeight, Image.SCALE_SMOOTH); // Resizing image to square
         JLabel imageLabel = new JLabel(new ImageIcon(resizedImage));
@@ -62,7 +62,6 @@ public class PhotoAlbumView extends JFrame{
         btnPanel.add(dateBtn);
         btnPanel.add(sizeBtn);
         btnPanel.add(exitBtn);
-
         // Add a component listener to handle resizing
         addComponentListener(new ComponentAdapter() {
             @Override
