@@ -34,7 +34,7 @@ public class PhotoAlbumView extends JFrame{
         }));
         initializeView();
         // Timer to delay resize action
-        resizeTimer = new Timer(200, new ActionListener() { @Override public void actionPerformed(ActionEvent e) { redrawScreen(screenID); } });
+        resizeTimer = new Timer(200, new ActionListener() { @Override public void actionPerformed(ActionEvent e) { drawScreen(screenID); } });
         resizeTimer.setRepeats(false);  // Only run the action once after the delay
     }
 
@@ -154,24 +154,24 @@ public class PhotoAlbumView extends JFrame{
                 oldState = e.getOldState();
                 // Check if the window was maximized
                 if ((newState & Frame.MAXIMIZED_BOTH) != 0 && (oldState & Frame.MAXIMIZED_BOTH) == 0) { // Window was maximized, trigger resize
-                    redrawScreen(screenID);
+                    drawScreen(screenID);
                 }
                 // Check if the window was restored
                 if ((newState & Frame.MAXIMIZED_BOTH) == 0 && (oldState & Frame.MAXIMIZED_BOTH) != 0) { // Window was restored, trigger resize
-                    redrawScreen(screenID);
+                    drawScreen(screenID);
                 }
             }
         });
     }
 
-    private void redrawScreen(int screenID) {
+    private void drawScreen(int screenID) {
         System.out.println("Redrawing screen with ID: " + screenID);
         switch (screenID){
             case 1:
                 redrawMainScreen();
                 break;
             case 2:
-                redrawEnterImagePathScreen();
+                drawEnterImagePathScreen();
                 break;
             default:
                 System.out.println("Error: Invalid screenID.");
@@ -215,58 +215,76 @@ public class PhotoAlbumView extends JFrame{
         repaint();
     }
 
-    private void redrawEnterImagePathScreen() {
+    private void drawEnterImagePathScreen() {
         // Create the Enter Image Path Panel
-        enterPathPanel = new JPanel(new BorderLayout());
-        // Label
-        enterPathLabel = new JLabel("Enter File Path: ", JLabel.CENTER);
-        enterPathLabel.setFont(new Font("Arial", Font.BOLD, 25));
-        // Status label (below input)
-        statusLabel = new JLabel("[Status of Image Fetch will be Displayed Here]", JLabel.CENTER);
-        statusLabel.setFont(new Font("Arial", Font.BOLD, 20));
-        // Text Field (for user input)
-        JTextField pathTextField = new JTextField(30);
-        pathTextField.setFont(new Font("Arial", Font.PLAIN, 20));
-        // When user presses Enter, fetch image
-        pathTextField.addActionListener(e -> {
-            String photoPath = pathTextField.getText().trim(); // Get input path
-            if (photoPath.isEmpty()) {
-                statusLabel.setText("Error: Please enter a valid file path.");
-                return;
-            }
-            // Try loading the image
-            ImageIcon imageIcon = new ImageIcon(photoPath);
-            if (imageIcon.getIconWidth() == -1) {
-                statusLabel.setText("Error: Could not load image. Check the path.");
-            } else {
-                statusLabel.setText("Image loaded successfully!");
-                model.addPhoto(photoPath);
-                displayImage(model.current());
-                changeScreenID(1); // Switch to main screen
-            }
-        });
-        // Panel to hold label and text field
-        JPanel inputPanel = new JPanel();
-        inputPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
-        inputPanel.add(enterPathLabel);
-        inputPanel.add(pathTextField);
-        // Add components to the Enter Path Panel
-        enterPathPanel.add(inputPanel, BorderLayout.CENTER);
-        enterPathPanel.add(statusLabel, BorderLayout.SOUTH);
-        // Add the Enter Path Panel to the layered pane at a higher layer
-        JLayeredPane layeredPane = getLayeredPane();
-        enterPathPanel.setBounds(0, 0, getWidth(), getHeight());
-        enterPathPanel.setBackground(new Color(0, 0, 0, 128));  // Semi-transparent background
-        enterPathPanel.setVisible(true); // Make it visible
-        layeredPane.add(enterPathPanel, JLayeredPane.MODAL_LAYER); // Add to the modal layer
-        // Refresh the UI
-        revalidate();
-        repaint();
+        if (enterPathPanel != null){
+            JLayeredPane layeredPane = getLayeredPane();
+            layeredPane.add(enterPathPanel);
+            enterPathPanel.setVisible(true);
+        }
+        else if (enterPathPanel == null) {
+            enterPathPanel = new JPanel();
+            enterPathPanel.setLayout(new BorderLayout());
+            enterPathPanel.setOpaque(true);
+            // Label
+            enterPathLabel = new JLabel("Enter File Path: ", JLabel.CENTER);
+            enterPathLabel.setFont(new Font("Arial", Font.BOLD, 25));
+            enterPathLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            // Status label (below input)
+            statusLabel = new JLabel("[Status of Fetch will be here. Enter nothing to return to main screen.]", JLabel.CENTER);
+            statusLabel.setFont(new Font("Arial", Font.BOLD, 15));
+            statusLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            // Text Field (for user input)
+            JTextField pathTextField = new JTextField(30);
+            pathTextField.setFont(new Font("Arial", Font.BOLD, 20));
+            // Colors
+            Color fColor = Color.BLACK;
+            enterPathLabel.setForeground(fColor);
+            statusLabel.setForeground(fColor);
+            Color bColor = Color.WHITE;
+            enterPathLabel.setBackground(bColor);
+            statusLabel.setBackground(bColor);
+            // When user presses Enter, fetch image
+            pathTextField.addActionListener(e -> {
+                String photoPath = pathTextField.getText().trim(); // Get input path
+                if (photoPath.isEmpty()) {
+                    changeScreenID(1); // Switch to main screen
+                    return;
+                }
+                // Try loading the image
+                ImageIcon imageIcon = new ImageIcon(photoPath);
+                if (imageIcon.getIconWidth() == -1) {
+                    statusLabel.setText("Error: Could not load image. Check the path.");
+                } else {
+                    statusLabel.setText("Image loaded successfully!");
+                    model.addPhoto(photoPath);
+                    displayImage(model.current());
+                }
+            });
+            // Panel to hold label and text field
+            JPanel inputPanel = new JPanel();
+            inputPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
+            inputPanel.add(enterPathLabel);
+            inputPanel.add(pathTextField);
+            inputPanel.add(statusLabel);
+            enterPathPanel.add(inputPanel, BorderLayout.CENTER);
+            // Add the Enter Path Panel to the layered pane at a higher layer
+            JLayeredPane layeredPane = getLayeredPane();
+            enterPathPanel.setBounds(0, 0, getWidth(), getHeight());
+            enterPathPanel.setBackground(Color.RED);  // Semi-transparent background
+            enterPathPanel.setVisible(true); // Make it visible
+            layeredPane.add(enterPathPanel, JLayeredPane.MODAL_LAYER); // Add to the modal layer
+            // Refresh the UI
+            revalidate();
+            repaint();
+            // Wait 3 seconds
+
+        }
     }
 
     public void changeScreenID(int id) {
         screenID = id;
-        redrawScreen(screenID);
+        drawScreen(screenID);
         if (screenID == 1) { // Remove the Enter Path Panel when switching to the main screen
             JLayeredPane layeredPane = getLayeredPane();
             layeredPane.remove(enterPathPanel);
