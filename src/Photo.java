@@ -4,7 +4,7 @@ public class Photo {
     private String name;
     private String filePath;
     private Date dateAdded;
-    private long fileSize;
+    private long fileSize; // In bytes
     // Constructor, getters, and setters
     public Photo(String n, String f, Date d, long s) {
         name = n;

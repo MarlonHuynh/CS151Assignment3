@@ -1,29 +1,45 @@
+import javax.swing.*;
+import java.awt.*;
+import java.io.File;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 import java.util.Iterator;
 
 public class PhotoAlbumModel {
-    private List<String> photos;
+    private List<Photo> photos;
 
-    public PhotoAlbumModel() { photos = new ArrayList<>();  }
-    public List<String> getPhotos() { return photos; }
-    public void addPhoto(String photo) { photos.add(photo); }
-    public void removePhoto(String photo) { photos.remove(photo); }
+    public PhotoAlbumModel() {
+        photos = new ArrayList<>();
+    }
 
-    // Iterator implementation
-    public Iterator<String> iterator() { return new PhotoAlbumIterator(); }
-    private class PhotoAlbumIterator implements Iterator<String> {
-        private int index = 0; // Specific to each iterator!
-        @Override
-        public boolean hasNext() {
-            return index < photos.size();
+    public void addPhoto(String photoPath){ // Assumes a valid photoPath
+        File file = new File(photoPath);
+        String name = file.getName();
+        ImageIcon imageIcon = new ImageIcon(photoPath);
+        Date lastModified = new Date();
+        long fileSizeInBytes = file.length();
+        Photo newPhoto = new Photo(name, photoPath, lastModified, fileSizeInBytes);
+        photos.add(newPhoto);
+    }
+
+    public List<Photo> getPhotos() {
+        return photos;
+    }
+
+    public Photo getPhoto(int i){
+        if (i < photos.size()){
+            return photos.get(i);
         }
-        @Override
-        public String next() {
-            if (hasNext()) {
-                return photos.get(index++);
-            }
-            throw new IndexOutOfBoundsException("No more photos.");
+        else{
+            return photos.get(0);
         }
+    }
+    public void removePhoto(String photo) {
+
     }
 }
