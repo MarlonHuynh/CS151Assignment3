@@ -45,7 +45,7 @@ public class PhotoAlbumView extends JFrame{
         // App
         setLayout(new BorderLayout());
         setTitle("Marlon's Photo Album");
-        ImageIcon appIcon = new ImageIcon("src/IconImage.PNG");
+        ImageIcon appIcon = new ImageIcon("src/blank.PNG");
         setIconImage(appIcon.getImage());
         // Display the main frame
         setSize(1500, 1000);    // Default Size
@@ -108,7 +108,7 @@ public class PhotoAlbumView extends JFrame{
         //        DYNAMIC SIZING BASED ON WINDOW SIZE
         // --------------------------------------------------
         // Set main Image (right side)'s size dynamically
-        mainImage = (new ImageIcon("src/IconImage.PNG")).getImage();
+        mainImage = (new ImageIcon("src/blank.PNG")).getImage();
         imageHeight = getHeight() - buttonPanelHeight - 100;
         resizedImage = mainImage.getScaledInstance(imageHeight, imageHeight, Image.SCALE_SMOOTH); // Resizing image to square
         mainImageLabel = new JLabel(new ImageIcon(resizedImage));
