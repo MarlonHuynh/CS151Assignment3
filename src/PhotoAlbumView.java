@@ -16,7 +16,7 @@ public class PhotoAlbumView extends JFrame{
     private int newState, oldState;
     private int screenID = 1;                       // 1 == Main Screen, 2 = Enter Image Path Screen
     // JPanels
-    private JPanel mainImagePanel, mainImageTextPanel, btnPanel, leftPanel, innerLeftPanel;
+    private JPanel mainImagePanel, mainImageTextPanel, btnPanel, leftPanel, innerLeftPanel, enterPathPanel;
     // JComponents
     private JButton addBtn, delBtn, nextBtn, prevBtn, sortNameBtn, sortDateBtn, sortSizeBtn, exitBtn, changeNameBtn, changeDateBtn;
     private JLabel mainImageLabel;  // Image
@@ -216,15 +216,8 @@ public class PhotoAlbumView extends JFrame{
     }
 
     private void redrawEnterImagePathScreen() {
-        // Remove all components before adding new ones
-        getContentPane().removeAll();
-        setLayout(new GridBagLayout());
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.CENTER;
-        // Create a panel for entering the file path
-        JPanel enterPathPanel = new JPanel(new BorderLayout());
+        // Create the Enter Image Path Panel
+        enterPathPanel = new JPanel(new BorderLayout());
         // Label
         enterPathLabel = new JLabel("Enter File Path: ", JLabel.CENTER);
         enterPathLabel.setFont(new Font("Arial", Font.BOLD, 25));
@@ -248,6 +241,8 @@ public class PhotoAlbumView extends JFrame{
             } else {
                 statusLabel.setText("Image loaded successfully!");
                 model.addPhoto(photoPath);
+                displayImage(model.current());
+                changeScreenID(1); // Switch to main screen
             }
         });
         // Panel to hold label and text field
@@ -255,21 +250,28 @@ public class PhotoAlbumView extends JFrame{
         inputPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
         inputPanel.add(enterPathLabel);
         inputPanel.add(pathTextField);
-        // Add components to the main panel
+        // Add components to the Enter Path Panel
         enterPathPanel.add(inputPanel, BorderLayout.CENTER);
         enterPathPanel.add(statusLabel, BorderLayout.SOUTH);
-        // Add panel to frame
-        add(enterPathPanel, gbc);
-        // Refresh UI
+        // Add the Enter Path Panel to the layered pane at a higher layer
+        JLayeredPane layeredPane = getLayeredPane();
+        enterPathPanel.setBounds(0, 0, getWidth(), getHeight());
+        enterPathPanel.setBackground(new Color(0, 0, 0, 128));  // Semi-transparent background
+        enterPathPanel.setVisible(true); // Make it visible
+        layeredPane.add(enterPathPanel, JLayeredPane.MODAL_LAYER); // Add to the modal layer
+        // Refresh the UI
         revalidate();
         repaint();
     }
 
-
-
-    public void changeScreenID(int id){
+    public void changeScreenID(int id) {
         screenID = id;
         redrawScreen(screenID);
+        if (screenID == 1) { // Remove the Enter Path Panel when switching to the main screen
+            JLayeredPane layeredPane = getLayeredPane();
+            layeredPane.remove(enterPathPanel);
+            enterPathPanel.setVisible(false);
+        }
     }
     // Set button colors for different states
     private void setButtonColors(JButton button) {
