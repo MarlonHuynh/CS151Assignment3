@@ -258,6 +258,7 @@ public class PhotoAlbumView extends JFrame{
                 } else {
                     statusLabel.setText("Image loaded successfully!");
                     model.addPhoto(photoPath);
+                    System.out.println("Added " + photoPath);
                     displayImage(model.current());
                 }
             });
@@ -361,7 +362,7 @@ public class PhotoAlbumView extends JFrame{
         prevBtn.addActionListener(e -> { listener.actionPerformed(e); });
     }
     public void addNextBtnListener(ActionListener listener) {
-        addBtn.addActionListener(e -> { listener.actionPerformed(e); });
+        nextBtn.addActionListener(e -> { listener.actionPerformed(e); });
     }
     public void addSortNameBtnListener(ActionListener listener) {
         sortNameBtn.addActionListener(e -> { listener.actionPerformed(e); });
