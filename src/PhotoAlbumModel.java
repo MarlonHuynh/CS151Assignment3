@@ -2,10 +2,9 @@ import javax.swing.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
-import java.util.List;
 
 public class PhotoAlbumModel implements AlbumIterator {
-    private List<Photo> photos;
+    private ArrayList<Photo> photos;
     private int index = 0;
     public PhotoAlbumModel() {
         photos = new ArrayList<>();
@@ -21,6 +20,15 @@ public class PhotoAlbumModel implements AlbumIterator {
     }
     public void removePhoto(String photo) {
 
+    }
+    public void setPhotos(ArrayList<Photo> p){
+        photos = p;
+    }
+    public ArrayList<Photo> getPhotos(){
+        return photos;
+    }
+    public int getIndex(){
+        return index;
     }
     // --- Interface Implementation ---
     public boolean hasNext() {

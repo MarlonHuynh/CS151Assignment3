@@ -1,36 +1,50 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
+import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.*;
 
+import java.awt.image.BufferedImage;
+import java.io.File;
 import java.lang.management.ManagementFactory;
 import java.lang.management.MemoryMXBean;
 import java.lang.management.MemoryUsage;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.ArrayList;
+import java.util.Date;
 
 public class PhotoAlbumView extends JFrame{
     private PhotoAlbumModel model;
-
+    // State and constant Variables
     private final int buttonPanelHeight = 100;      // Height of the button panel
     private int imageHeight;                        // Height of the image (determined at runtime)
     private final Timer resizeTimer;
     private int newState, oldState;
     private int screenID = 1;                       // 1 == Main Screen, 2 = Enter Image Path Screen
-    // JPanels
-    private JPanel mainImagePanel, mainImageTextPanel, btnPanel, leftPanel, innerLeftPanel, enterPathPanel;
-    // JComponents
+    private int inputID = 1;                        // 1 == Enter image, 2 == Change Name, 3 == Change Date
+    private boolean isProcessing = false;
+    // Main Screen JPanels
+    private JPanel mainImagePanel, mainImageTextPanel, btnPanel, leftPanel, innerLeftPanel;
+    // Main Screen JComponents
     private JButton addBtn, delBtn, nextBtn, prevBtn, sortNameBtn, sortDateBtn, sortSizeBtn, exitBtn, changeNameBtn, changeDateBtn;
     private JLabel mainImageLabel;  // Image
-    private JLabel topLabel, bottomLabel, leftTextLabel;
-    private JLabel enterPathLabel, statusLabel;
-    // Other variables
+    private JLabel topLabel, bottomLabel;
+    private ArrayList<JLabel> leftImages = new ArrayList<>();
+    private ArrayList<JTextArea> leftTexts = new ArrayList<>();
     private Image mainImage, resizedImage;
     private ImageIcon scaledLeftIcons;
+    // Enter Screen Components
+    private JPanel inputPanel;
+    private JLabel enterLabel;
+    private JTextArea statusLabel;
+    private JTextField fieldLabel;
 
     public PhotoAlbumView(PhotoAlbumModel m){
         model = m;
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.gc(); // Force garbage collection
-            printMemoryStats(); // Print memory stats for debugging
+            HelperFunctions.printMemoryStats(); // Print memory stats for debugging
         }));
         initializeView();
         // Timer to delay resize action
@@ -45,8 +59,6 @@ public class PhotoAlbumView extends JFrame{
         // App
         setLayout(new BorderLayout());
         setTitle("Marlon's Photo Album");
-        ImageIcon appIcon = new ImageIcon("src/blank.PNG");
-        setIconImage(appIcon.getImage());
         // Display the main frame
         setSize(1500, 1000);    // Default Size
         setVisible(true);
@@ -69,16 +81,16 @@ public class PhotoAlbumView extends JFrame{
         sortDateBtn = new JButton("Sort by Date");
         sortSizeBtn = new JButton("Sort by Size");
         // Set Colors
-        setButtonColors(addBtn);
-        setButtonColors(nextBtn);
-        setButtonColors(prevBtn);
-        setButtonColors(delBtn);
-        setButtonColors(exitBtn);
-        setButtonColors(sortNameBtn);
-        setButtonColors(sortDateBtn);
-        setButtonColors(sortSizeBtn);
-        setButtonColors(changeNameBtn);
-        setButtonColors(changeDateBtn);
+        HelperFunctions.setButtonColors(addBtn);
+        HelperFunctions.setButtonColors(nextBtn);
+        HelperFunctions.setButtonColors(prevBtn);
+        HelperFunctions.setButtonColors(delBtn);
+        HelperFunctions.setButtonColors(exitBtn);
+        HelperFunctions.setButtonColors(sortNameBtn);
+        HelperFunctions.setButtonColors(sortDateBtn);
+        HelperFunctions.setButtonColors(sortSizeBtn);
+        HelperFunctions.setButtonColors(changeNameBtn);
+        HelperFunctions.setButtonColors(changeDateBtn);
         // Add buttons to the panel
         btnPanel.add(addBtn);
         btnPanel.add(changeNameBtn);
@@ -108,7 +120,12 @@ public class PhotoAlbumView extends JFrame{
         //        DYNAMIC SIZING BASED ON WINDOW SIZE
         // --------------------------------------------------
         // Set main Image (right side)'s size dynamically
-        mainImage = (new ImageIcon("src/blank.PNG")).getImage();
+        // Create a BufferedImage of the specified width and height
+        BufferedImage blackSquare = new BufferedImage(100, 100, BufferedImage.TYPE_INT_ARGB);
+        Graphics g = blackSquare.getGraphics();
+        g.setColor(Color.WHITE);
+        g.fillRect(0, 0, 100, 100);
+        mainImage = blackSquare;
         imageHeight = getHeight() - buttonPanelHeight - 100;
         resizedImage = mainImage.getScaledInstance(imageHeight, imageHeight, Image.SCALE_SMOOTH); // Resizing image to square
         mainImageLabel = new JLabel(new ImageIcon(resizedImage));
@@ -121,13 +138,23 @@ public class PhotoAlbumView extends JFrame{
             scaledLeftIcons = new ImageIcon(mainImage.getScaledInstance((getWidth() - imageHeight) / 4, (getWidth() - imageHeight) / 4, Image.SCALE_SMOOTH)); // Adjust size as needed
             JLabel leftImagesLabel = new JLabel(scaledLeftIcons);
             // Create the text label
-            leftTextLabel = new JLabel("No Image Title - No Image Date", JLabel.CENTER);
-            leftTextLabel.setFont(new Font("Arial", Font.BOLD, 20));
+            JTextArea leftTextArea = new JTextArea(2, 20);
+            leftTextArea.setText("No image displayed. Please add an image.");
+            leftTextArea.setLineWrap(true);  // Enable line wrapping
+            leftTextArea.setWrapStyleWord(true);  // Wrap at word boundaries, not in the middle of words
+            leftTextArea.setMargin(new Insets(10, 10, 10, 10));
+            leftTextArea.setFont(new Font("Arial", Font.BOLD, 20));
             // Create a panel to hold the image and text
             innerLeftPanel = new JPanel(new BorderLayout());
             // Add the image and text to the panel
-            innerLeftPanel.add(leftImagesLabel, BorderLayout.CENTER);       // Place image in the center
-            innerLeftPanel.add(leftTextLabel, BorderLayout.NORTH);          // Place text above the image
+            innerLeftPanel.add(leftImagesLabel, BorderLayout.CENTER);
+            innerLeftPanel.add(leftTextArea, BorderLayout.NORTH);
+            if (i == 0){
+                innerLeftPanel.setBorder(new LineBorder(Color.LIGHT_GRAY, 2));
+            }
+            // Add the images and texts to ArrayList for later accessibility
+            leftImages.add(leftImagesLabel);
+            leftTexts.add(leftTextArea);
             // Add the panel to the leftPanel
             leftPanel.add(innerLeftPanel);
         }
@@ -168,10 +195,17 @@ public class PhotoAlbumView extends JFrame{
         System.out.println("Redrawing screen with ID: " + screenID);
         switch (screenID){
             case 1:
+                if (screenID == 1 && inputPanel != null) { // Remove the Enter Path Panel when switching to the main screen
+                    JLayeredPane layeredPane = getLayeredPane();
+                    layeredPane.remove(inputPanel);
+                    inputPanel.setVisible(false);
+                    // Update the left panels
+                    updateLeftPanel(model.getPhotos(), model.getIndex());
+                }
                 redrawMainScreen();
                 break;
             case 2:
-                drawEnterImagePathScreen();
+                drawInputPanel();
                 break;
             default:
                 System.out.println("Error: Invalid screenID.");
@@ -179,7 +213,25 @@ public class PhotoAlbumView extends JFrame{
         }
     }
 
-    private void redrawMainScreen(){
+    public void changeScreenID(int id) {
+        screenID = id;
+        drawScreen(screenID);
+        /*
+        if (screenID == 1) { // Remove the Enter Path Panel when switching to the main screen
+            JLayeredPane layeredPane = getLayeredPane();
+            layeredPane.remove(inputPanel);
+            inputPanel.setVisible(false);
+            // Update the left panels
+            updateLeftPanel(model.getPhotos(), model.getIndex());
+        }*/
+    }
+
+    public void changeInputID(int i){
+        inputID = i;
+        System.out.println("inputID changed to " + i);
+    }
+
+    public void redrawMainScreen(){
         // Update the image size for the main image
         imageHeight = getHeight() - buttonPanelHeight - 100;
         resizedImage.flush();
@@ -199,7 +251,6 @@ public class PhotoAlbumView extends JFrame{
                             // Resize the image directly without retaining unnecessary references
                             Image imgIcon = icon.getImage();
                             imgIcon.flush();  // Ensure old image is cleared
-                            // Nullify references to the old Image and ImageIcon
 
                             Image resizedImgIcon = imgIcon.getScaledInstance((getWidth() - imageHeight) / 4, (getWidth() - imageHeight) / 4, Image.SCALE_SMOOTH);
                             lbl.setIcon(new ImageIcon(resizedImgIcon));  // Set the resized thumbnail
@@ -215,131 +266,133 @@ public class PhotoAlbumView extends JFrame{
         repaint();
     }
 
-    private void drawEnterImagePathScreen() {
-        // Create the Enter Image Path Panel
-        if (enterPathPanel != null){
+    private void drawInputPanel() {
+        System.out.println("Current inputID: " + inputID);
+        // Create the Enter Image Path Panel if not already created
+        if (inputPanel != null){ // If it exists, unhide it
             JLayeredPane layeredPane = getLayeredPane();
-            layeredPane.add(enterPathPanel);
-            enterPathPanel.setVisible(true);
+            layeredPane.add(inputPanel);
+            inputPanel.setVisible(true);
+            switch (inputID){ // Makes sure the panel has correct info
+                case 1: // Enter
+                    enterLabel.setText(inputID + " - Enter File Path: ");
+                    statusLabel.setText("To add, enter a valid [name, file path, date], [file path], or [folder path]. Enter nothing to return to main screen. Date is to be formatted in 'MM/DD/YYYY HH:MM [Time Zone]'. For example, 'Apple, F:/Art/Apple.png, 12/22/2003 6:30 PST'");
+                    break;
+                case 2: // Change Name
+                    enterLabel.setText(inputID + " - Enter New Name: ");
+                    statusLabel.setText("[To add, enter a name. Enter nothing to return to main screen.]");
+                    break;
+                case 3: // Change Date
+                    enterLabel.setText(inputID + " - Enter New Date: ");
+                    statusLabel.setText("[To add, enter a date in the form 'MM/DD/YYYY HH:MM [Time Zone]'. Enter nothing to return to main screen.]");
+                    break;
+                default:
+                    break;
+            }
+
         }
-        else if (enterPathPanel == null) {
-            enterPathPanel = new JPanel();
-            enterPathPanel.setLayout(new BorderLayout());
-            enterPathPanel.setOpaque(true);
+        else if (inputPanel == null) {  // If it doesn't exist, create it
+            inputPanel = new JPanel();
+            inputPanel.setLayout(new BorderLayout());
+            inputPanel.setOpaque(true);
             // Label
-            enterPathLabel = new JLabel("Enter File Path: ", JLabel.CENTER);
-            enterPathLabel.setFont(new Font("Arial", Font.BOLD, 25));
-            enterPathLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+            enterLabel = new JLabel(inputID + " - Enter File Path: ", JLabel.CENTER);
+            enterLabel.setFont(new Font("Arial", Font.BOLD, 25));
+            enterLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
             // Status label (below input)
-            statusLabel = new JLabel("[Status of Fetch will be here. Enter nothing to return to main screen.]", JLabel.CENTER);
-            statusLabel.setFont(new Font("Arial", Font.BOLD, 15));
+            statusLabel = new JTextArea(5, 30);
+            statusLabel.setLineWrap(true);  // Enable line wrapping
+            statusLabel.setWrapStyleWord(true);  // Wrap at word boundaries, not in the middle of words
+            statusLabel.setMargin(new Insets(10, 10, 10, 10));
+
+            statusLabel.setText("To add, enter a valid [name, file path, date], [file path], or [folder path]. Enter nothing to return to main screen. Date is to be formatted in 'MM/DD/YYYY HH:MM [Time Zone]'. For example, 'Apple, F:/Art/Apple.png, 12/22/2003 6:30 PST'");
+            statusLabel.setFont(new Font("Arial", Font.BOLD, 25));
             statusLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
             // Text Field (for user input)
-            JTextField pathTextField = new JTextField(30);
-            pathTextField.setFont(new Font("Arial", Font.BOLD, 20));
+            fieldLabel = new JTextField(30);
+            fieldLabel.setFont(new Font("Arial", Font.BOLD, 20));
             // Colors
             Color fColor = Color.BLACK;
-            enterPathLabel.setForeground(fColor);
+            enterLabel.setForeground(fColor);
             statusLabel.setForeground(fColor);
             Color bColor = Color.WHITE;
-            enterPathLabel.setBackground(bColor);
+            enterLabel.setBackground(bColor);
             statusLabel.setBackground(bColor);
-            // When user presses Enter, fetch image
-            pathTextField.addActionListener(e -> {
-                String photoPath = pathTextField.getText().trim(); // Get input path
-                if (photoPath.isEmpty()) {
-                    changeScreenID(1); // Switch to main screen
-                    return;
+            // When user presses Enter, perform action
+            fieldLabel.addActionListener(e -> {
+                if (isProcessing) { return;  } // Prevent duplicate triggers
+                isProcessing = true;  // Set flag to indicate action is in progress
+                String inputString = fieldLabel.getText().trim(); // Get input path
+                if (inputString.isEmpty()) { // Switch to main screen
+                    changeScreenID(1);
                 }
-                // Try loading the image
-                ImageIcon imageIcon = new ImageIcon(photoPath);
-                if (imageIcon.getIconWidth() == -1) {
-                    statusLabel.setText("Error: Could not load image. Check the path.");
-                } else {
-                    statusLabel.setText("Image loaded successfully!");
-                    model.addPhoto(photoPath);
-                    System.out.println("Added " + photoPath);
+                else if (inputID == 1) {
+                    System.out.println("Executing with inputID == " + inputID);
+                    File file = new File(inputString);
+                    if (file.isDirectory()) {
+                        File[] imageFiles = file.listFiles((dir, name) -> name.toLowerCase().endsWith(".jpg") || name.toLowerCase().endsWith(".jpeg") || name.toLowerCase().endsWith(".png") || name.toLowerCase().endsWith(".gif"));
+                        if (imageFiles == null || imageFiles.length == 0) {
+                            statusLabel.setText("No images found in the folder. Try again or enter blank to go back.");
+                            isProcessing = false;
+                            return;
+                        }
+                        for (File imageFile : imageFiles) {
+                            model.addPhoto(imageFile.getAbsolutePath());
+                            System.out.println("Added " + imageFile.getAbsolutePath());
+                        }
+                        statusLabel.setText(imageFiles.length + " images loaded successfully! Enter more or enter blank to go back.");
+                        displayImage(model.current());
+                    }
+                    else if (file.isFile() &&
+                            (inputString.toLowerCase().endsWith(".jpg") || inputString.toLowerCase().endsWith(".jpeg") || inputString.toLowerCase().endsWith(".png") || inputString.toLowerCase().endsWith(".gif"))) {
+                        model.addPhoto(file.getAbsolutePath());
+                        System.out.println("Added " + file.getAbsolutePath());
+                        statusLabel.setText("Image loaded successfully! Enter blank to go back.");
+                        displayImage(model.current());
+                    } else {
+                        statusLabel.setText("Error: Invalid file or directory. Please enter a valid image file or folder.");
+                    }
+                }
+                else if (inputID == 2) { // Change Name
+                    model.current().setName(inputString);
+                    statusLabel.setText("Changed name to " + inputString + "Enter blank to go back.");
                     displayImage(model.current());
                 }
+                else if (inputID == 3) { // Change Date
+                    SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm z");
+                    Date date = new Date();
+                    try {
+                        date = dateFormat.parse(inputString);
+                        statusLabel.setText("Date parsed!");
+                    }
+                    catch (ParseException p) {
+                        statusLabel.setText("Error: Invalid input parse for change date! Enter 'MM/DD/YYYY HH:MM [Time Zone] or blank to go back.");
+                    }
+                    model.current().setDateAdded(date);
+                    System.out.println("Set date to " + date);
+                    displayImage(model.current());
+                }
+                isProcessing = false;  // Reset flag to allow the next input
             });
+
+
             // Panel to hold label and text field
             JPanel inputPanel = new JPanel();
             inputPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
-            inputPanel.add(enterPathLabel);
-            inputPanel.add(pathTextField);
+            inputPanel.add(enterLabel);
+            inputPanel.add(fieldLabel);
             inputPanel.add(statusLabel);
-            enterPathPanel.add(inputPanel, BorderLayout.CENTER);
+            this.inputPanel.add(inputPanel, BorderLayout.CENTER);
             // Add the Enter Path Panel to the layered pane at a higher layer
             JLayeredPane layeredPane = getLayeredPane();
-            enterPathPanel.setBounds(0, 0, getWidth(), getHeight());
-            enterPathPanel.setBackground(Color.RED);  // Semi-transparent background
-            enterPathPanel.setVisible(true); // Make it visible
-            layeredPane.add(enterPathPanel, JLayeredPane.MODAL_LAYER); // Add to the modal layer
+            this.inputPanel.setBounds(0, 0, getWidth(), getHeight());
+            this.inputPanel.setBackground(Color.RED);  // Semi-transparent background
+            this.inputPanel.setVisible(true); // Make it visible
+            layeredPane.add(this.inputPanel, JLayeredPane.MODAL_LAYER); // Add to the modal layer
             // Refresh the UI
             revalidate();
             repaint();
-            // Wait 3 seconds
-
         }
-    }
-
-    public void changeScreenID(int id) {
-        screenID = id;
-        drawScreen(screenID);
-        if (screenID == 1) { // Remove the Enter Path Panel when switching to the main screen
-            JLayeredPane layeredPane = getLayeredPane();
-            layeredPane.remove(enterPathPanel);
-            enterPathPanel.setVisible(false);
-        }
-    }
-    // Set button colors for different states
-    private void setButtonColors(JButton button) {
-        Font buttonFont = new Font("Arial", Font.BOLD, 20);
-        button.setFont(buttonFont);
-        button.setBackground(Color.BLACK);  // Default background color
-        button.setForeground(Color.WHITE);  // Text color
-        button.setFocusPainted(false);  // Remove focus border
-        button.setFocusable(false);  // Disable focus behavior
-        button.setContentAreaFilled(false);  // Enable default button press effects
-        button.setRolloverEnabled(true);  // Enable rollover effect
-        button.setOpaque(true);
-        button.setBorder(new EmptyBorder(10, 25, 10, 25));
-        // Override up a MouseListener to handle color changes
-        button.addMouseListener(new MouseAdapter() {
-            @Override public void mouseEntered(MouseEvent e) { button.setBackground(Color.decode("#45001f")); } // Hover color
-            @Override public void mouseExited(MouseEvent e) { button.setBackground(Color.BLACK); } // Color when exiting
-            @Override public void mousePressed(MouseEvent e) { button.setBackground(Color.decode("#45001f").brighter()); } // Color when pressed
-            @Override public void mouseReleased(MouseEvent e) { button.setBackground(Color.decode("#45001f")); } // Color after release
-            @Override public void mouseClicked(MouseEvent e) { button.setBackground(Color.decode("#45001f").darker()); }
-        });
-    }
-
-    // Custom class for creating icons with a solid color
-    class ColorIcon implements Icon {
-        private Color color;
-        public ColorIcon(Color color) { this.color = color; }
-        @Override public void paintIcon(Component c, Graphics g, int x, int y) { g.setColor(color); g.fillRect(x, y, getIconWidth(), getIconHeight()); }
-        @Override public int getIconWidth() { return 100; }
-        @Override public int getIconHeight() { return 30; }
-    }
-    // Helps debugs memory
-    private static void printMemoryStats() {
-        // Print Runtime memory stats
-        Runtime runtime = Runtime.getRuntime();
-        long totalMemory = runtime.totalMemory();
-        long freeMemory = runtime.freeMemory();
-        long usedMemory = totalMemory - freeMemory;
-
-        System.out.println("Memory Stats:");
-        System.out.println("Total Memory: " + totalMemory / (1024 * 1024) + " MB");
-        System.out.println("Free Memory: " + freeMemory / (1024 * 1024) + " MB");
-        System.out.println("Used Memory: " + usedMemory / (1024 * 1024) + " MB");
-
-        // Optional: Use MemoryMXBean for more detailed memory stats
-        MemoryMXBean memoryMXBean = ManagementFactory.getMemoryMXBean();
-        MemoryUsage heapMemoryUsage = memoryMXBean.getHeapMemoryUsage();
-        System.out.println("Heap Memory - Used: " + heapMemoryUsage.getUsed() / (1024 * 1024) + " MB");
-        System.out.println("Heap Memory - Max: " + heapMemoryUsage.getMax() / (1024 * 1024) + " MB");
     }
 
     // private JButton addBtn, changeNameBtn, changeDateBtn, delBtn, exitBtn, prevBtn, nextBtn, sortNameBtn, sortDateBtn, sortSizeBtn;
@@ -375,19 +428,37 @@ public class PhotoAlbumView extends JFrame{
     }
 
     public void displayImage(Photo p) {
-        // Load the new image from the given path (assuming the photo is a file path)
-        ImageIcon imageIcon = new ImageIcon(p.getFilePath());
-        mainImage = imageIcon.getImage();
-
-        // Resize the image to fit the current window size
+        mainImage = new ImageIcon(p.getFilePath()).getImage();
         imageHeight = getHeight() - buttonPanelHeight - 100;
         resizedImage = mainImage.getScaledInstance(imageHeight, imageHeight, Image.SCALE_SMOOTH);
-
-        // Update the main image label with the resized image
         mainImageLabel.setIcon(new ImageIcon(resizedImage));
-
-        topLabel.setText("Title of the Image: " + p.getName());
+        topLabel.setText("Title: " + p.getName());
         bottomLabel.setText("Date: " + p.getDateAdded());
     }
+
+    public void updateLeftPanel(ArrayList<Photo> masterAlbum, int currentIndex) {
+        for (int i = 0; i < leftImages.size(); i++) {
+            if (currentIndex + i >= 0 && currentIndex + i < masterAlbum.size()) { // Checks if the access is within bounds of the panel's indexes (0 to 8)
+                ImageIcon imageIcon = new ImageIcon(masterAlbum.get(currentIndex + i).getFilePath());
+                Image image = imageIcon.getImage();
+                Image resizedImgIcon = image.getScaledInstance((getWidth() - imageHeight) / 4, (getWidth() - imageHeight) / 4, Image.SCALE_SMOOTH);
+
+                JPanel innerPanel = (JPanel) leftPanel.getComponent(i);
+                JLabel label1 = (JLabel) innerPanel.getComponent(0);
+                label1.setIcon(new ImageIcon(resizedImgIcon));
+                JTextArea label2 = (JTextArea) innerPanel.getComponent(1);
+                label2.setText( masterAlbum.get(currentIndex + i).getName() + "\n" + masterAlbum.get(currentIndex + i).getFileSize() + " bytes " + "\n" + masterAlbum.get(currentIndex + i).getDateAdded().toString());
+            }
+            else { // Else sets the null image
+                JPanel innerPanel = (JPanel) leftPanel.getComponent(i);
+                JLabel label1 = (JLabel) innerPanel.getComponent(0);
+                label1.setIcon(null);
+                JTextArea label2 = (JTextArea) innerPanel.getComponent(1);
+                label2.setText("");
+            }
+        }
+        redrawMainScreen();
+    }
+
 
 }

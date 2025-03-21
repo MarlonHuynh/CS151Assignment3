@@ -1,5 +1,6 @@
+import java.util.ArrayList;
 import java.util.List;
 
 public interface SortingStrategy {
-    List<Photo> sort(List<Photo> photos);
+    ArrayList<Photo> sort(List<Photo> photos);
 }
