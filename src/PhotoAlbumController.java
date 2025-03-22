@@ -19,13 +19,11 @@ public class PhotoAlbumController {
     }
     private void changeName() {
         System.out.println("Clicked change name button!");
-        view.changeInputID(2);
-        view.changeScreenID(2);
+        view.changeToChangeNameScreen();
     }
     private void changeDate() {
         System.out.println("Clicked change date button!");
-        view.changeInputID(3);
-        view.changeScreenID(2);
+        view.changeToChangeDateScreen();
     }
     private void sortSize() {
         System.out.println("Clicked sort size button!");
@@ -33,37 +31,32 @@ public class PhotoAlbumController {
         model.setPhotos(sortObj.sort(model.getPhotos()));
         view.updateLeftPanel(model.getPhotos(), model.getIndex());
         view.displayImage(model.current());
-        view.redrawMainScreen();
+        view.drawMainScreen();
     }
-
     private void sortDate() {
         System.out.println("Clicked sort date button!");
         SortByDate sortObj = new SortByDate();
         model.setPhotos(sortObj.sort(model.getPhotos()));
         view.updateLeftPanel(model.getPhotos(), model.getIndex());
         view.displayImage(model.current());
-        view.redrawMainScreen();
+        view.drawMainScreen();
     }
-
     private void sortName() {
         System.out.println("Clicked sort name button!");
         SortByName sortObj = new SortByName();
         model.setPhotos(sortObj.sort(model.getPhotos()));
         view.updateLeftPanel(model.getPhotos(), model.getIndex());
         view.displayImage(model.current());
-        view.redrawMainScreen();
+        view.drawMainScreen();
     }
-
     private void addImage() {
         System.out.println("Clicked add button!");
-        view.changeInputID(1);
-        view.changeScreenID(2);
+        view.changeToAddScreen();
     }
-
     private void delImage() {
         System.out.println("Clicked del button!");
+        view.changeToDeleteScreen();
     }
-
     public void prevImage(){
         System.out.println("Clicked prev button!");
         if (model.hasPrevious()){

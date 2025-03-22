@@ -18,8 +18,31 @@ public class PhotoAlbumModel implements AlbumIterator {
         Photo newPhoto = new Photo(name, photoPath, lastModified, fileSizeInBytes);
         photos.add(newPhoto);
     }
-    public void removePhoto(String photo) {
-
+    public void addPhoto(Photo p){
+        photos.add(p);
+    }
+    public boolean removePhoto(String s) {
+        boolean found = false;
+        int foundIndex = 0;
+        for (int i = 0; i < photos.size(); i++) {
+            // Check if the photo name matches the provided photo name
+            if (photos.get(i).getName().equals(s)) {
+                photos.remove(i);
+                found = true;
+                foundIndex = 0;
+                break;  // Once we find and remove, we exit the loop
+            }
+        }
+        if (foundIndex == photos.size() - 1){
+            index --;
+            if (index < 0){
+                index = 0;
+            }
+        }
+        if (found) {
+            photos.trimToSize();
+        }
+        return found;
     }
     public void setPhotos(ArrayList<Photo> p){
         photos = p;
