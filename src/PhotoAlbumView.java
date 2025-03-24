@@ -1,6 +1,5 @@
 /**
  * PhotoAlbumView.java
- *
  * Description: Manages the display of the photo album.
  *
  * @author  Marlon Huynh
@@ -58,6 +57,7 @@ public class PhotoAlbumView extends JFrame{
             HelperFunctions.printMemoryStats(); // Print memory stats for debugging
         }));
         initializeView();
+        this.setVisible(true);
     }
     /**
      * Initializes the starting view of the program and all variables associated.
@@ -384,7 +384,7 @@ public class PhotoAlbumView extends JFrame{
             }
             else if (inputID == 2) { // Change Name
                 model.current().setName(inputString);
-                statusLabel.setText("Changed name to " + inputString + "Enter blank to go back.");
+                statusLabel.setText("Changed name to " + inputString + ". Enter blank to go back.");
             }
             else if (inputID == 3) { // Change Date
                 SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm z");
