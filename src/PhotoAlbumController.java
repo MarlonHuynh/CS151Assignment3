@@ -1,3 +1,12 @@
+/**
+ * PhotoAlbumController.java
+ *
+ * Description: Acts as an intermediate between the View and Model, and helps manages the interactivity of the program.
+ *
+ * @author  Marlon Huynh
+ * @version 1.0, 3/29/2025
+ */
+
 public class PhotoAlbumController {
     private PhotoAlbumModel model;  // Reference to the model
     private PhotoAlbumView view;  // Reference to the view

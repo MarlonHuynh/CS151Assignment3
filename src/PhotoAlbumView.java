@@ -1,3 +1,12 @@
+/**
+ * PhotoAlbumView.java
+ *
+ * Description: Manages the display of the photo album.
+ *
+ * @author  Marlon Huynh
+ * @version 1.0, 3/29/2025
+ */
+
 import javax.swing.*;
 import javax.swing.border.LineBorder;
 import java.awt.*;

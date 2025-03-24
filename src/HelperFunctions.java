@@ -1,3 +1,12 @@
+/**
+ * HelperFunctions.java
+ *
+ * Description: Additional Helper methods used in the program
+ *
+ * @author  Marlon Huynh
+ * @version 1.0, 3/29/2025
+ */
+
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;

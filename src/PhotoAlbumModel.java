@@ -1,3 +1,12 @@
+/**
+ * PhotoAlbumModel.java
+ *
+ * Description: Stores and manipulates the photo album.
+ *
+ * @author  Marlon Huynh
+ * @version 1.0, 3/29/2025
+ */
+
 import javax.swing.*;
 import java.io.File;
 import java.util.ArrayList;

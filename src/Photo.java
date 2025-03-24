@@ -1,3 +1,12 @@
+/**
+ * Photo.java
+ *
+ * Description: Definition of the Photo object, each with a name, file path, date added, and file size.
+ *
+ * @author  Marlon Huynh
+ * @version 1.0, 3/29/2025
+ */
+
 import java.util.Date;
 
 public class Photo {
