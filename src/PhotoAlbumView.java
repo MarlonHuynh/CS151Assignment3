@@ -219,8 +219,8 @@ public class PhotoAlbumView extends JFrame{
                     layeredPane.remove(inputPanel);
                     inputPanel.setVisible(false);
                     // Update the panels
-                    updateLeftPanel(model.getPhotos(), model.getIndex());
-                    if (model.getPhotos().isEmpty()){ displayEmptyImage(); }
+                    updateLeftPanel(model.getAlbum(), model.getIndex());
+                    if (model.getAlbum().isEmpty()){ displayEmptyImage(); }
                     else{ displayImage(model.current()); }
                 }
                 drawMainScreen();
@@ -520,7 +520,7 @@ public class PhotoAlbumView extends JFrame{
         mainImageLabel.setIcon(new ImageIcon(resizedImage));
         topLabel.setText("Upload something! [Current Photo's Title will be Displayed Here.]");
         bottomLabel.setText("[Current Photo's Date will be Displayed Here.]");
-        updateLeftPanel(model.getPhotos(), model.getIndex());
+        updateLeftPanel(model.getAlbum(), model.getIndex());
         setButtonsLock(true);
     }
     /**

@@ -12,6 +12,11 @@ import java.util.List;
 import java.util.Comparator;
 
 public class SortByName implements SortingStrategy {
+    /**
+     * Sorts the album by name and return the sorted album
+     *
+     * @return the sorted album
+     */
     @Override
     public ArrayList<Photo> sort(List<Photo> old) {
         ArrayList <Photo> sortedPhotos = new ArrayList<>(old);

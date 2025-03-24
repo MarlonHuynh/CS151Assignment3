@@ -12,6 +12,5 @@ public class PhotoAlbumApp {
         PhotoAlbumModel model = new PhotoAlbumModel();
         PhotoAlbumView view = new PhotoAlbumView(model);
         PhotoAlbumController controller = new PhotoAlbumController(model, view);
-        view.setVisible(true);
     }
 }
