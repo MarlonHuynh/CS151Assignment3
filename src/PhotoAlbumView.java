@@ -26,7 +26,7 @@ public class PhotoAlbumView extends JFrame{
     private int screenID = 1;                       // Two Screens: 1 == Main Screen, 2 = Input Screens
     private int inputID = 1;                        // Screen states for Input Screen: 1 == Enter image, 2 == Change Name, 3 == Change Date, 4 == Delete
     private boolean isProcessing = false;           // Timer boolean for input processing so too many calls aren't made
-    private final Timer resizeTimer;                // Timer for resizing window so too many calls aren't made
+    private Timer resizeTimer;                      // Timer for resizing window so too many calls aren't made
     // Main Screen JPanels
     private JPanel mainImagePanel, mainImageTextPanel, btnPanel, leftPanel, innerLeftPanel;
     // Main Screen JComponents
@@ -46,6 +46,11 @@ public class PhotoAlbumView extends JFrame{
     /* -----------------------------------------------------------------
                     INITIALIZATION & NAVIGATIONAL LOGIC
      -----------------------------------------------------------------*/
+    /**
+     * Constructor of the photo album. Initializes the starting view.
+     *
+     * @param m The Photo Album Model
+     */
     public PhotoAlbumView(PhotoAlbumModel m){
         model = m;
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
@@ -53,14 +58,17 @@ public class PhotoAlbumView extends JFrame{
             HelperFunctions.printMemoryStats(); // Print memory stats for debugging
         }));
         initializeView();
-        // Timer to delay resize action
-        resizeTimer = new Timer(200, new ActionListener() { @Override public void actionPerformed(ActionEvent e) { setScreen(screenID); } });
-        resizeTimer.setRepeats(false);  // Only run the action once after the delay
     }
+    /**
+     * Initializes the starting view of the program and all variables associated.
+     */
     public void initializeView() {
         // --------------------------------------------------
         //              ONE-TIME INITIALIZATION
         // --------------------------------------------------
+        // Timer for resizing app (prevents too many resize calls)
+        resizeTimer = new Timer(200, new ActionListener() { @Override public void actionPerformed(ActionEvent e) { setScreen(screenID); } });
+        resizeTimer.setRepeats(false);  // Only run the action once after the delay
         // App
         setLayout(new BorderLayout());
         setTitle("Marlon's Photo Album");
@@ -196,6 +204,11 @@ public class PhotoAlbumView extends JFrame{
             }
         });
     }
+    /**
+     * Changes the UI of the program to the specified screen
+     *
+     * @param screenID the ID of the screen to set to
+     */
     private void setScreen(int screenID) {
         System.out.println("Redrawing screen with ID: " + screenID);
         switch (screenID){
@@ -220,6 +233,9 @@ public class PhotoAlbumView extends JFrame{
                 break;
         }
     }
+    /**
+     * Draws the main screen of the program (with the left panels, right image, and buttons)
+     */
     public void drawMainScreen(){
         // Update the image size for the main image
         imageHeight = getHeight() - buttonPanelHeight - 100;
@@ -252,6 +268,9 @@ public class PhotoAlbumView extends JFrame{
         revalidate();
         repaint();
     }
+    /**
+     * Draws the input panel, which allows the user to input a string (for actions such as add, delete, change name, and change date)
+     */
     private void setInputPanel() {
         if (inputPanel != null){        // If it exists, unhide it
             unhideInputPanel();
@@ -260,6 +279,9 @@ public class PhotoAlbumView extends JFrame{
             initializeInputPanel();
         }
     }
+    /**
+     * Initializes the input panel.
+     */
     public void initializeInputPanel(){
         inputPanel = new JPanel();
         inputPanel.setLayout(new BorderLayout());
@@ -389,6 +411,9 @@ public class PhotoAlbumView extends JFrame{
         revalidate();
         repaint();
     }
+    /**
+     * Updates and unhide the input panel.
+     */
     public void unhideInputPanel(){
         JLayeredPane layeredPane = getLayeredPane();
         layeredPane.add(inputPanel);
@@ -417,30 +442,65 @@ public class PhotoAlbumView extends JFrame{
                     HELPER METHODS FOR CHANGING DISPLAY
      -----------------------------------------------------------------*/
     // --- Changing Screen ---
+    /**
+     * Changes to the 'Add' input screen
+     */
     public void changeToAddScreen(){
         changeInputID(1);
         changeScreenID(2);
     }
+    /**
+     * Changes to the 'Change Name' input screen
+     */
     public void changeToChangeNameScreen(){
         changeInputID(2);
         changeScreenID(2);
     }
+    /**
+     * Changes to the 'Change Date' input screen
+     */
     public void changeToChangeDateScreen(){
         changeInputID(3);
         changeScreenID(2);
     }
+    /**
+     * Changes to the 'Delete' input screen
+     */
     public void changeToDeleteScreen(){
         changeInputID(4);
         changeScreenID(2);
     }
-    public void changeInputID(int i){
-        inputID = i;
-    }
+    /**
+     * Changes the screenID to the specified number
+     * Here are the screenIDs used:
+     * 1 - Main Screen
+     * 2 - Input Screen
+     *
+     * @param id the ID of the screen ID to change to
+     */
     public void changeScreenID(int id) {
         screenID = id;
         setScreen(screenID);
     }
+    /**
+     * Changes the inputID to the specified number
+     * Here are the inputID used:
+     * 1 - Add Input
+     * 2 - Change Name Input
+     * 3 - Change Date Input
+     * 4 - Delete Input
+     *
+     * @param i the ID of the input screen to change to
+     */
+    public void changeInputID(int i){
+        inputID = i;
+    }
     // --- Changing Images ---
+    /**
+     * Changes the right side main image to the specified Photo
+     *
+     * @param p the Photo to display on the main image
+     */
     public void displayImage(Photo p) {
         mainImage = new ImageIcon(p.getFilePath()).getImage();
         imageHeight = getHeight() - buttonPanelHeight - 100;
@@ -450,6 +510,9 @@ public class PhotoAlbumView extends JFrame{
         bottomLabel.setText("Date: " + p.getDateAdded());
         setButtonsLock(false);
     }
+    /**
+     * Changes the right side main image to an empty image
+     */
     public void displayEmptyImage() {
         // Set to a blank or placeholder image
         mainImage = whiteSquare;
@@ -460,6 +523,12 @@ public class PhotoAlbumView extends JFrame{
         updateLeftPanel(model.getPhotos(), model.getIndex());
         setButtonsLock(true);
     }
+    /**
+     * Updates all the left panels using the album and current index
+     *
+     * @param masterAlbum the Photo arrayList to display
+     * @param currentIndex the Photo arrayList's current index
+     */
     public void updateLeftPanel(ArrayList<Photo> masterAlbum, int currentIndex) {
         // Clears panels if album is empty
         if (masterAlbum == null || masterAlbum.isEmpty()) {
@@ -495,6 +564,13 @@ public class PhotoAlbumView extends JFrame{
         drawMainScreen();
     }
     // --- Changing Buttons' State ---
+    /**
+     * Updates the buttons to lock out certain buttons if there are no images in the album
+     * as it is impossible to do actions like Next, Change Date, etc. if there are no images.
+     *
+     * @param b the state of the buttons. With false being majority locked and true being
+     *          all buttons available.
+     */
     public void setButtonsLock(boolean b){
         if (b) {
             addBtn.setEnabled(true);
@@ -524,6 +600,9 @@ public class PhotoAlbumView extends JFrame{
     /* -----------------------------------------------------------------
                         BUTTON ACTION LISTENERS
      -----------------------------------------------------------------*/
+    /**
+     * Adds a button listener to the respective button.
+     */
     public void addAddBtnListener(ActionListener listener) { addBtn.addActionListener(e -> { listener.actionPerformed(e); }); }
     public void addChangeNameBtnListener(ActionListener listener) { changeNameBtn.addActionListener(e -> { listener.actionPerformed(e); }); }
     public void addChangeDateBtnListener(ActionListener listener) { changeDateBtn.addActionListener(e -> { listener.actionPerformed(e); }); }

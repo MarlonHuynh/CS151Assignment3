@@ -10,8 +10,13 @@
 public class PhotoAlbumController {
     private PhotoAlbumModel model;  // Reference to the model
     private PhotoAlbumView view;  // Reference to the view
-
-    // Constructor to initialize the view and model
+    /**
+     * Brief description of what the method does.
+     *
+     * @param
+     * @return
+     * @throws
+     */
     public PhotoAlbumController(PhotoAlbumModel m, PhotoAlbumView v) {
         model = m;
         view = v;
