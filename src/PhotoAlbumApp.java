@@ -1,3 +1,5 @@
+import javax.swing.*;
+
 /**
  * PhotoAlbumApp.java
  * Description: Creates a photo album app using the MVC pattern and implementing Strategy pattern.
@@ -8,8 +10,10 @@
 
 public class PhotoAlbumApp {
     public static void main(String[] args) {
-        PhotoAlbumModel model = new PhotoAlbumModel();
-        PhotoAlbumView view = new PhotoAlbumView(model);
-        PhotoAlbumController controller = new PhotoAlbumController(model, view);
+        SwingUtilities.invokeLater(() -> {
+            PhotoAlbumView view = new PhotoAlbumView();
+            PhotoAlbumModel model = new PhotoAlbumModel();
+            PhotoAlbumController controller = new PhotoAlbumController(model, view);
+        });
     }
 }

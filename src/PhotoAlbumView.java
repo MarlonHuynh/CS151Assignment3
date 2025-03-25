@@ -11,20 +11,14 @@ import javax.swing.border.LineBorder;
 import java.awt.*;
 import java.awt.event.*;
 import java.awt.image.BufferedImage;
-import java.io.File;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Date;
 
 public class PhotoAlbumView extends JFrame{
-    private final PhotoAlbumModel model;
     // State and constant Variables
     private final int buttonPanelHeight = 100;      // Height of the button panel
     private int imageHeight;                        // Height of the main image (determined at runtime)
     private int screenID = 1;                       // Two Screens: 1 == Main Screen, 2 = Input Screens
     private int inputID = 1;                        // Screen states for Input Screen: 1 == Enter image, 2 == Change Name, 3 == Change Date, 4 == Delete
-    private boolean isProcessing = false;           // Timer boolean for input processing so too many calls aren't made
     private Timer resizeTimer;                      // Timer for resizing window so too many calls aren't made
     // Main Screen JPanels
     private JPanel mainImagePanel, mainImageTextPanel, btnPanel, leftPanel, innerLeftPanel;
@@ -41,17 +35,14 @@ public class PhotoAlbumView extends JFrame{
     private JPanel inputPanel;
     private JLabel enterLabel;
     private JTextArea statusLabel;
-    private JTextField fieldLabel;
+    private JTextField fieldLabel = new JTextField();
     /* -----------------------------------------------------------------
                     INITIALIZATION & NAVIGATIONAL LOGIC
      -----------------------------------------------------------------*/
     /**
      * Constructor of the photo album. Initializes the starting view.
-     *
-     * @param m The Photo Album Model
      */
-    public PhotoAlbumView(PhotoAlbumModel m){
-        model = m;
+    public PhotoAlbumView(){
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
             System.gc();                        // Force garbage collection
             HelperFunctions.printMemoryStats(); // Print memory stats for debugging
@@ -63,6 +54,7 @@ public class PhotoAlbumView extends JFrame{
      * Initializes the starting view of the program and all variables associated.
      */
     public void initializeView() {
+        System.out.println(fieldLabel.getText() + "--is initialized!");
         // --------------------------------------------------
         //              ONE-TIME INITIALIZATION
         // --------------------------------------------------
@@ -213,14 +205,9 @@ public class PhotoAlbumView extends JFrame{
     private void setScreen(int screenID) {
         System.out.println("Redrawing screen with ID: " + screenID);
         switch (screenID){
-            case 1:
-                if (inputPanel != null) { // Removes the input panel if its there and update the main screen
-                    // Remove the Input Panel when switching to the Main Screen
+            case 1: // Removes the input panel if its there and update the main screen
+                if (inputPanel != null) {
                     inputPanel.setVisible(false);
-                    // Update the panels
-                    updateLeftPanel(model.getAlbum(), model.getIndex());
-                    if (model.getAlbum().isEmpty()){ displayEmptyImage(); }
-                    else{ displayImage(model.current()); }
                 }
                 drawMainScreen();
                 break;
@@ -274,7 +261,7 @@ public class PhotoAlbumView extends JFrame{
         if (inputPanel != null){        // If it exists, unhide it
             unhideInputPanel();
         }
-        else if (inputPanel == null) {  // If it doesn't exist, create it
+        else {  // If it doesn't exist, create it
             initializeInputPanel();
         }
     }
@@ -298,7 +285,7 @@ public class PhotoAlbumView extends JFrame{
         statusLabel.setFont(new Font("Arial", Font.BOLD, 25));
         statusLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
         // Text Field (for user input)
-        fieldLabel = new JTextField(30);
+        fieldLabel = new JTextField("Enter input here!", 30);
         fieldLabel.setFont(new Font("Arial", Font.BOLD, 20));
         // Colors
         Color fColor = Color.BLACK;
@@ -323,92 +310,6 @@ public class PhotoAlbumView extends JFrame{
         inputPanel.setBackground(Color.RED);
         inputPanel.setVisible(true);
         layeredPane.add(inputPanel, JLayeredPane.MODAL_LAYER); // Add to the modal layer (topmost layer)
-        // When user presses Enter, perform action
-        fieldLabel.addActionListener(e -> {
-            if (isProcessing) { return; }   // Prevent duplicate triggers
-            isProcessing = true;            // Set flag to indicate action is in progress
-            String inputString = fieldLabel.getText().trim(); // Get input path
-            if (inputString.isEmpty()) { // Switch to main screen if empty
-                changeScreenID(1);
-            }
-            else if (inputID == 1) { // Add new file logic
-                // --- Method 1: [name, file path, date] format ---
-                String[] parts = inputString.split(",", 3);
-                if (parts.length == 3) {
-                    File defaultFile = new File(parts[1]);
-                    if (defaultFile.isFile()) {
-                        SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm z");
-                        Date date = new Date();
-                        try {
-                            date = dateFormat.parse(parts[2]);
-                        } catch (ParseException p) {
-                            statusLabel.setText("Error: Invalid input parse for change date! enter a valid [name,file path,date], [file path], or [folder path] or blank to go back.");
-                            isProcessing = false;
-                            return;
-                        }
-                        // All parts requirement met for [name, file path, date] format
-                        Photo p = new Photo(parts[0], parts[1], date, defaultFile.length());
-                        statusLabel.setText(inputString + " is parsed and added!");
-                        model.addPhoto(p);
-                        isProcessing = false;
-                        return;
-                    }
-                    else{
-                        statusLabel.setText("Error: Invalid input parse for change date! enter a valid [name,file path,date], [file path], or [folder path] or blank to go back.");
-                        isProcessing = false;
-                        return;
-                    }
-                }
-                // --- Method 2: [directory path] format ---
-                File file = new File(inputString);
-                if (file.isDirectory()) {
-                    File[] imageFiles = file.listFiles((dir, name) -> name.toLowerCase().endsWith(".jpg") || name.toLowerCase().endsWith(".jpeg") || name.toLowerCase().endsWith(".png") || name.toLowerCase().endsWith(".gif"));
-                    if (imageFiles == null || imageFiles.length == 0) {
-                        statusLabel.setText("No images found in the folder. Try again or enter blank to go back.");
-                        isProcessing = false;
-                        return;
-                    }
-                    for (File imageFile : imageFiles) {
-                        model.addPhoto(imageFile.getAbsolutePath());
-                        System.out.println("Added " + imageFile.getAbsolutePath());
-                    }
-                    statusLabel.setText(imageFiles.length + " images at " + inputString + " loaded successfully! Enter more or enter blank to go back.");
-                }
-                // --- Method 3: [file path] format ---
-                else if (file.isFile() &&
-                        (inputString.toLowerCase().endsWith(".jpg") || inputString.toLowerCase().endsWith(".jpeg") || inputString.toLowerCase().endsWith(".png") || inputString.toLowerCase().endsWith(".gif"))) {
-                    model.addPhoto(file.getAbsolutePath());
-                    System.out.println("Added " + file.getAbsolutePath());
-                    statusLabel.setText("Image at " + inputString + " loaded successfully! Enter blank to go back.");
-                } else {
-                    statusLabel.setText("Error: Invalid file or directory. Please enter a valid image file or folder.");
-                }
-            }
-            else if (inputID == 2) { // Change Name
-                model.current().setName(inputString);
-                statusLabel.setText("Changed name to " + inputString + ". Enter blank to go back.");
-            }
-            else if (inputID == 3) { // Change Date
-                SimpleDateFormat dateFormat = new SimpleDateFormat("MM/dd/yyyy HH:mm z");
-                Date date = new Date();
-                try {
-                    date = dateFormat.parse(inputString);
-                    statusLabel.setText(date + " Date parsed!");
-                }
-                catch (ParseException p) {
-                    statusLabel.setText("Error: Invalid input parse for change date! Enter 'MM/DD/YYYY HH:MM [Time Zone] or blank to go back.");
-                }
-                model.current().setDateAdded(date);
-                System.out.println("Set date to " + date);
-            }
-            else if (inputID == 4) { // Delete
-                boolean removed = model.removePhoto(inputString);
-                if (removed) { statusLabel.setText(inputString + " successfully removed!"); }
-                else { statusLabel.setText("Error: No such photo found. Enter name to try again or blank to go back."); }
-            }
-
-            isProcessing = false;  // Reset flag to allow the next input
-        });
         // Refresh the UI
         revalidate();
         repaint();
@@ -475,10 +376,10 @@ public class PhotoAlbumView extends JFrame{
         changeScreenID(2);
     }
     /**
-     * Changes the screenID to the specified number
+     * Changes the screenID to the specified number and sets the appropriate screen
      * Here are the screenIDs used:
      * 1 - Main Screen
-     * 2 - Input Screen
+     * 2 - Input Screens
      *
      * @param id the ID of the screen ID to change to
      */
@@ -487,7 +388,7 @@ public class PhotoAlbumView extends JFrame{
         setScreen(screenID);
     }
     /**
-     * Changes the inputID to the specified number
+     * Changes the inputID to the specified number to determine what Input Screen should be displayed, if it were to be displayed
      * Here are the inputID used:
      * 1 - Add Input
      * 2 - Change Name Input
@@ -517,14 +418,13 @@ public class PhotoAlbumView extends JFrame{
     /**
      * Changes the right side main image to an empty image
      */
-    public void displayEmptyImage() {
+    public void displayEmptyMainImage() {
         // Set to a blank or placeholder image
         mainImage = whiteSquare;
         resizedImage = mainImage.getScaledInstance(imageHeight, imageHeight, Image.SCALE_SMOOTH);
         mainImageLabel.setIcon(new ImageIcon(resizedImage));
         topLabel.setText("Upload something! [Current Photo's Title will be Displayed Here.]");
         bottomLabel.setText("[Current Photo's Date will be Displayed Here.]");
-        updateLeftPanel(model.getAlbum(), model.getIndex());
         setButtonsLock(true);
     }
     /**
@@ -602,19 +502,24 @@ public class PhotoAlbumView extends JFrame{
         }
     }
     /* -----------------------------------------------------------------
-                        BUTTON ACTION LISTENERS
+                                GETTERS
      -----------------------------------------------------------------*/
     /**
      * Adds a button listener to the respective button.
      */
-    public void addAddBtnListener(ActionListener listener) { addBtn.addActionListener(e -> { listener.actionPerformed(e); }); }
-    public void addChangeNameBtnListener(ActionListener listener) { changeNameBtn.addActionListener(e -> { listener.actionPerformed(e); }); }
-    public void addChangeDateBtnListener(ActionListener listener) { changeDateBtn.addActionListener(e -> { listener.actionPerformed(e); }); }
-    public void addDelBtnListener(ActionListener listener) { delBtn.addActionListener(e -> { listener.actionPerformed(e); }); }
-    public void addExitBtnListener(ActionListener listener) { exitBtn.addActionListener(e -> { listener.actionPerformed(e); }); }
-    public void addPrevBtnListener(ActionListener listener) { prevBtn.addActionListener(e -> { listener.actionPerformed(e); }); }
-    public void addNextBtnListener(ActionListener listener) { nextBtn.addActionListener(e -> { listener.actionPerformed(e); }); }
-    public void addSortNameBtnListener(ActionListener listener) { sortNameBtn.addActionListener(e -> { listener.actionPerformed(e); }); }
-    public void addSortDateBtnListener(ActionListener listener) { sortDateBtn.addActionListener(e -> { listener.actionPerformed(e); }); }
-    public void addSortSizeBtnListener(ActionListener listener) { sortSizeBtn.addActionListener(e -> {  listener.actionPerformed(e); }); }
+    public JButton getAddBtn() { return addBtn; }
+    public JButton getChangeNameBtn() { return changeNameBtn; }
+    public JButton getChangeDateBtn() { return changeDateBtn; }
+    public JButton getDelBtn() { return delBtn; }
+    public JButton getExitBtn() { return exitBtn; }
+    public JButton getPrevBtn() { return prevBtn; }
+    public JButton getNextBtn() { return nextBtn; }
+    public JButton getSortNameBtn() { return sortNameBtn; }
+    public JButton getSortDateBtn() { return sortDateBtn; }
+    public JButton getSortSizeBtn() { return sortSizeBtn; }
+
+    public JTextField getFieldLabel(){ return fieldLabel; }
+    public JTextArea getStatusLabel(){ return statusLabel; }
+    public int getInputID(){ return inputID; }
+
 }

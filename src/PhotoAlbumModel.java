@@ -11,13 +11,16 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class PhotoAlbumModel implements AlbumIterator {
+    private ArrayList<Observer> observers;
     private ArrayList<Photo> album;
     private int index = 0;
     /**
      * Constructor
      */
     public PhotoAlbumModel() {
+        observers = new ArrayList<>();
         album = new ArrayList<>();
+
     }
     /**
      * Adds a specified photo to the album
@@ -92,6 +95,21 @@ public class PhotoAlbumModel implements AlbumIterator {
      */
     public int getIndex(){
         return index;
+    }
+    // --- Observer Implementation ---
+    // Add an observer (View)
+    public void addObserver(Observer observer) {
+        observers.add(observer);
+    }
+    // Remove an observer (View)
+    public void removeObserver(Observer observer) {
+        observers.remove(observer);
+    }
+    // Notify all registered observers
+    public void notifyObservers(String message) {
+        for (Observer observer : observers) {
+            observer.update(message);
+        }
     }
     // --- Interface Implementation ---
     /**
