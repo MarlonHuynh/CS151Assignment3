@@ -18,7 +18,7 @@ public class PhotoAlbumController {
     public PhotoAlbumController(PhotoAlbumModel m, PhotoAlbumView v) {
         model = m;
         view = v;
-        view.addAddBtnListener(e -> addImage(), v.get);
+        view.addAddBtnListener(e -> addImage());
         view.addPrevBtnListener(e -> prevImage());
         view.addNextBtnListener(e -> nextImage());
         view.addDelBtnListener(e -> delImage());

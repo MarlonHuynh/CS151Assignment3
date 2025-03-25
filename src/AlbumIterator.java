@@ -7,9 +7,9 @@
  */
 
 public interface AlbumIterator {
-    boolean hasNext();      // to check if there is a next element
-    boolean hasPrevious();  // to check if there is a previous element
-    Photo current();        // to get the photo at the current position
-    Photo next();           // to advance the iterator to the next position
-    Photo previous();       // to advance the iterator to the previous position
+    boolean hasNext();      // check if there is a next element
+    boolean hasPrevious();  // check if there is a previous element
+    Photo current();        // get the Photo at the current position
+    Photo next();           // get the Photo at the next position
+    Photo previous();       // get the Photo at the previous position
 }

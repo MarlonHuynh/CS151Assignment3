@@ -53,7 +53,7 @@ public class PhotoAlbumView extends JFrame{
     public PhotoAlbumView(PhotoAlbumModel m){
         model = m;
         Runtime.getRuntime().addShutdownHook(new Thread(() -> {
-            System.gc(); // Force garbage collection
+            System.gc();                        // Force garbage collection
             HelperFunctions.printMemoryStats(); // Print memory stats for debugging
         }));
         initializeView();
@@ -328,7 +328,7 @@ public class PhotoAlbumView extends JFrame{
             if (isProcessing) { return; }   // Prevent duplicate triggers
             isProcessing = true;            // Set flag to indicate action is in progress
             String inputString = fieldLabel.getText().trim(); // Get input path
-            if (inputString.isEmpty()) { // Switch to main screen
+            if (inputString.isEmpty()) { // Switch to main screen if empty
                 changeScreenID(1);
             }
             else if (inputID == 1) { // Add new file logic

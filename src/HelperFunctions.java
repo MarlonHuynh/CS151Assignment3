@@ -9,7 +9,6 @@
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 import java.lang.management.ManagementFactory;
@@ -43,10 +42,10 @@ public class HelperFunctions {
         button.setFont(buttonFont);
         button.setBackground(Color.BLACK);  // Default background color
         button.setForeground(Color.WHITE);  // Text color
-        button.setFocusPainted(false);  // Remove focus border
-        button.setFocusable(false);  // Disable focus behavior
-        button.setContentAreaFilled(false);  // Enable default button press effects
-        button.setRolloverEnabled(true);  // Enable rollover effect
+        button.setFocusPainted(false);
+        button.setFocusable(false);
+        button.setContentAreaFilled(false);
+        button.setRolloverEnabled(true);
         button.setOpaque(true);
         button.setBorder(new EmptyBorder(10, 25, 10, 25));
         // Override up a MouseListener to handle color changes
