@@ -1,13 +1,11 @@
 /**
  * PhotoAlbumModel.java
- *
  * Description: Stores and manipulates the photo album.
  *
  * @author  Marlon Huynh
  * @version 1.0, 3/29/2025
  */
 
-import javax.swing.*;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.Date;
@@ -29,7 +27,6 @@ public class PhotoAlbumModel implements AlbumIterator {
     public void addPhoto(String photoPath){ // Assumes a valid photoPath
         File file = new File(photoPath);
         String name = file.getName();
-        ImageIcon imageIcon = new ImageIcon(photoPath);
         Date lastModified = new Date();
         long fileSizeInBytes = file.length();
         Photo newPhoto = new Photo(name, photoPath, lastModified, fileSizeInBytes);
@@ -47,7 +44,7 @@ public class PhotoAlbumModel implements AlbumIterator {
      * Removes a specified photo of album
      *
      * @param s the name of the Photo
-     * @return a boolean if its true or not whether the photo has been found and removed
+     * @return a boolean if it's true or not whether the photo has been found and removed
      */
     public boolean removePhoto(String s) {
         boolean found = false;
@@ -57,7 +54,6 @@ public class PhotoAlbumModel implements AlbumIterator {
             if (album.get(i).getName().equals(s)) {
                 album.remove(i);
                 found = true;
-                foundIndex = 0;
                 break;  // Once we find and remove, we exit the loop
             }
         }

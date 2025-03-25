@@ -1,6 +1,5 @@
 /**
  * SortBySize.java
- *
  * Description: Sorting by size sorting strategy
  *
  * @author  Marlon Huynh

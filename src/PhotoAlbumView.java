@@ -18,7 +18,7 @@ import java.util.ArrayList;
 import java.util.Date;
 
 public class PhotoAlbumView extends JFrame{
-    private PhotoAlbumModel model;
+    private final PhotoAlbumModel model;
     // State and constant Variables
     private final int buttonPanelHeight = 100;      // Height of the button panel
     private int imageHeight;                        // Height of the main image (determined at runtime)
@@ -32,12 +32,12 @@ public class PhotoAlbumView extends JFrame{
     private JButton addBtn, delBtn, nextBtn, prevBtn, sortNameBtn, sortDateBtn, sortSizeBtn, exitBtn, changeNameBtn, changeDateBtn;
     private JLabel mainImageLabel;          // Image
     private JLabel topLabel, bottomLabel;
-    private ArrayList<JLabel> leftImages = new ArrayList<>();
-    private ArrayList<JTextArea> leftTexts = new ArrayList<>();
+    private final ArrayList<JLabel> leftImages = new ArrayList<>();
+    private final ArrayList<JTextArea> leftTexts = new ArrayList<>();
     private Image mainImage, resizedImage;
-    private ImageIcon scaledLeftIcons;
     private BufferedImage whiteSquare;      // Default image
     // Enter Screens Components
+    private JLayeredPane layeredPane;
     private JPanel inputPanel;
     private JLabel enterLabel;
     private JTextArea statusLabel;
@@ -73,7 +73,7 @@ public class PhotoAlbumView extends JFrame{
         setLayout(new BorderLayout());
         setTitle("Marlon's Photo Album");
         // Display the main frame
-        setSize(1500, 1000);    // Default Size
+        setSize(1200, 800);    // Default Size
         setVisible(true);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         // Define panels ---
@@ -149,7 +149,7 @@ public class PhotoAlbumView extends JFrame{
         leftPanel.setPreferredSize(new Dimension(getWidth() - imageHeight, getHeight() - buttonPanelHeight));
         for (int i = 0; i < 9; i++) {
             // Create the image icon and resize it
-            scaledLeftIcons = new ImageIcon(mainImage.getScaledInstance((getWidth() - imageHeight) / 4, (getWidth() - imageHeight) / 4, Image.SCALE_SMOOTH)); // Adjust size as needed
+            ImageIcon scaledLeftIcons = new ImageIcon(mainImage.getScaledInstance((getWidth() - imageHeight) / 4, (getWidth() - imageHeight) / 4, Image.SCALE_SMOOTH)); // Adjust size as needed
             JLabel leftImagesLabel = new JLabel(scaledLeftIcons);
             // Create the text label
             JTextArea leftTextArea = new JTextArea(2, 20);
@@ -158,6 +158,7 @@ public class PhotoAlbumView extends JFrame{
             leftTextArea.setWrapStyleWord(true);  // Wrap at word boundaries, not in the middle of words
             leftTextArea.setMargin(new Insets(10, 10, 10, 10));
             leftTextArea.setFont(new Font("Arial", Font.BOLD, 20));
+            leftTextArea.setEditable(false);
             // Create a panel to hold the image and text
             innerLeftPanel = new JPanel(new BorderLayout());
             // Add the image and text to the panel
@@ -215,8 +216,6 @@ public class PhotoAlbumView extends JFrame{
             case 1:
                 if (inputPanel != null) { // Removes the input panel if its there and update the main screen
                     // Remove the Input Panel when switching to the Main Screen
-                    JLayeredPane layeredPane = getLayeredPane();
-                    layeredPane.remove(inputPanel);
                     inputPanel.setVisible(false);
                     // Update the panels
                     updateLeftPanel(model.getAlbum(), model.getIndex());
@@ -309,14 +308,17 @@ public class PhotoAlbumView extends JFrame{
         enterLabel.setBackground(bColor);
         statusLabel.setBackground(bColor);
         // Panel to hold label and text field
-        JPanel tempPanel = new JPanel();
-        tempPanel.setLayout(new FlowLayout(FlowLayout.CENTER));
-        tempPanel.add(enterLabel);
-        tempPanel.add(fieldLabel);
-        tempPanel.add(statusLabel);
+        JPanel tempPanel = new JPanel(new GridBagLayout()); // Center components
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.gridx = 0;
+        gbc.gridy = GridBagConstraints.RELATIVE;
+        gbc.anchor = GridBagConstraints.CENTER;
+        tempPanel.add(enterLabel, gbc);
+        tempPanel.add(fieldLabel, gbc);
+        tempPanel.add(statusLabel, gbc);
         inputPanel.add(tempPanel, BorderLayout.CENTER);
         // Add the Enter Path Panel to the layered pane at a higher layer
-        JLayeredPane layeredPane = getLayeredPane();
+        layeredPane = getLayeredPane();
         inputPanel.setBounds(0, 0, getWidth(), getHeight());
         inputPanel.setBackground(Color.RED);
         inputPanel.setVisible(true);
@@ -415,8 +417,6 @@ public class PhotoAlbumView extends JFrame{
      * Updates and unhide the input panel.
      */
     public void unhideInputPanel(){
-        JLayeredPane layeredPane = getLayeredPane();
-        layeredPane.add(inputPanel);
         inputPanel.setVisible(true);
         switch (inputID){ // Makes sure the panel has correct info
             case 1: // Enter
@@ -437,6 +437,10 @@ public class PhotoAlbumView extends JFrame{
             default:
                 break;
         }
+        inputPanel.setBounds(0, 0, getWidth(), getHeight());
+        layeredPane.setLayer(inputPanel, JLayeredPane.MODAL_LAYER);
+        inputPanel.revalidate();
+        inputPanel.repaint();
     }
     /* -----------------------------------------------------------------
                     HELPER METHODS FOR CHANGING DISPLAY

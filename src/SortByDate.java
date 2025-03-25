@@ -1,6 +1,5 @@
 /**
  * SortByDate.java
- *
  * Description: Sorting by date sorting strategy
  *
  * @author  Marlon Huynh

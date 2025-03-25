@@ -1,6 +1,5 @@
 /**
  * PhotoAlbumController.java
- *
  * Description: Acts as an intermediate between the View and Model, and helps manages the interactivity of the program.
  *
  * @author  Marlon Huynh
@@ -8,8 +7,8 @@
  */
 
 public class PhotoAlbumController {
-    private PhotoAlbumModel model;  // Reference to the model
-    private PhotoAlbumView view;  // Reference to the view
+    private final PhotoAlbumModel model;  // Reference to the model
+    private final PhotoAlbumView view;  // Reference to the view
     /**
      * Constructor
      *
@@ -19,7 +18,7 @@ public class PhotoAlbumController {
     public PhotoAlbumController(PhotoAlbumModel m, PhotoAlbumView v) {
         model = m;
         view = v;
-        view.addAddBtnListener(e -> addImage());
+        view.addAddBtnListener(e -> addImage(), v.get);
         view.addPrevBtnListener(e -> prevImage());
         view.addNextBtnListener(e -> nextImage());
         view.addDelBtnListener(e -> delImage());

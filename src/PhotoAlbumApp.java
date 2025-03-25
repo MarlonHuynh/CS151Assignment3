@@ -1,6 +1,5 @@
 /**
  * PhotoAlbumApp.java
- *
  * Description: Creates a photo album app using the MVC pattern and implementing Strategy pattern.
  *
  * @author  Marlon Huynh

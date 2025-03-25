@@ -1,6 +1,5 @@
 /**
  * SortingStrategy.java
- *
  * Description: Sorting strategy interface
  *
  * @author  Marlon Huynh

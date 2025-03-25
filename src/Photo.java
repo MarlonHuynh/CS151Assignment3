@@ -1,6 +1,5 @@
 /**
  * Photo.java
- *
  * Description: Definition of the Photo object, each with a name, file path, date added, and file size.
  *
  * @author  Marlon Huynh
