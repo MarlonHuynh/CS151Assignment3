@@ -1,10 +1,3 @@
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.io.File;
-import java.text.ParseException;
-import java.text.SimpleDateFormat;
-import java.util.Date;
-
 /**
  * PhotoAlbumController.java
  * Description: Acts as an intermediate between the View and Model, and helps manages the interactivity of the program.
@@ -12,6 +5,13 @@ import java.util.Date;
  * @author  Marlon Huynh
  * @version 1.0, 3/29/2025
  */
+
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
+import java.io.File;
+import java.text.ParseException;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class PhotoAlbumController {
     private final PhotoAlbumModel model;  // Reference to the model
